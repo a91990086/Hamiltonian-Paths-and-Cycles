@@ -67,20 +67,44 @@ def check_unreachable(path, next_head, used_edge, adj):
     # Iterate through each node
     for node in adj_node_to_next_head:
         
+        # Skip this node if it is already in the path
         if (node in path):
 
             count = count + 1
             continue
 
         # How many unvisted neighbours does such node have
-        num_unvisited_adj = list(used_edge[node]).count(2)
+        #num_unvisited_adj = list(used_edge[node]).count(2)
+
+        # Append the current node to temp path
+        temp_path = path[:]
+        temp_path.append(node)
+
+        # Get the neighbors of next head
+        adj_nodes_to_node = [i for i, e in enumerate(adj[node]) if e == 1]
+        
+
+        for no in adj_nodes_to_node:
+
+
+            if no in temp_path:
+                continue
+
+            else:
+                break
+
+        # If we iterate through all neighbors of next head and all of them
+        # are already in the path (i.e. travelling to next head make this neighbor
+        # unreachable)
+        else:
+            reachable = 0
 
         # If travelling from head to next head makes one of next head's neightbor
         # unreachable
-        if (num_unvisited_adj == 1):
+        #if (num_unvisited_adj == 1):
 
-            reachable = 0
-            break
+        #    reachable = 0
+        #    break
 
     # If all adj nodes to next head are in path
     if (count == len(adj_node_to_next_head)):
@@ -99,7 +123,7 @@ def greedy_depth_first_search(Va, adj, used_edge, num_of_nodes, P):
 
     vertices_order, _ = zip(*Va)
 
-    # Get the rank of thier degree order
+    # Get the rank of their degree order
     degree_order_rank = [vertices_order.index(i) for i in adj_node_to_head]
 
     while (1):
@@ -211,8 +235,18 @@ def convert_to_hamiltonian(Va, path, used_edge, adj, num_of_nodes, phase):
 
             return 0
 
-        # Continue to extend the path with greedy depth first search
-        path = greedy_depth_first_search(Va, adj, used_edge, num_of_nodes, path)
+        if phase == 3:
+
+            if (adj[path[0]][path[-1]] == 1):
+                path.append(path[0])
+                break
+            else:
+                continue
+
+        elif phase == 2:
+
+            # Continue to extend the path with greedy depth first search
+            path = greedy_depth_first_search(Va, adj, used_edge, num_of_nodes, path)
 
     return path
 
@@ -280,14 +314,13 @@ def hybrid_ham(adj):
     # If none of the paths induced by the highest degree vertices
     # makes a hamiltonian path
 
-    ######################### NOTE: SO FAR ALL TESTED GRAPHS DID NOT ENTER PHASE 2 ####################
     else:
 
         length_of_path = []
 
         for p in path:
 
-            length_of_path.append(len(p))
+            length_of_path.append(len(p[0]))
 
         # Indices of the longest paths
         longest_path_idx = [i for i, j in enumerate(length_of_path) if j == max(length_of_path)]
@@ -309,7 +342,7 @@ def hybrid_ham(adj):
         # Go to phase 2
         path = convert_to_hamiltonian(Va, path_to_be_extended, used_edge, adj, num_of_nodes, phase = 2)
 
-        # We should have a hamiltonian path after phase 2, chechk to 
+        # We should have a hamiltonian path after phase 2, check to 
         # see if there is an edge connecting the first and last vertices for such path
         if (adj[path[0], path[-1]] == 1):
 
@@ -478,7 +511,7 @@ def main():
     # Test with large data sets
 
     # Read edge list from file
-    edge_list = np.genfromtxt(r'tsphcp/GP3_126.hcp', dtype = int, skip_header = 6, skip_footer = 2)
+    edge_list = np.genfromtxt(r'tsphcp/GPN_122.hcp', dtype = int, skip_header = 6, skip_footer = 2)
     edge_list = list(map(tuple, edge_list))
 
     # Create adjacency matrix from edge list
@@ -492,7 +525,9 @@ def main():
     end = 1
 
     # Now create the node between start and end
-    adj = create_node_between_vertices(start, end, adj)
+    if adj[start][end] != 1:
+
+        adj = create_node_between_vertices(start, end, adj)
 
     # Find the hamiltonian cycle
     path = hybrid_ham_repetative(adj, start, end, iter = 5)
@@ -506,6 +541,7 @@ def main():
         print(p)
         print("\n")
 
+    #path = hybrid_ham(adj)
     return 0
 
 if __name__ == '__main__':
